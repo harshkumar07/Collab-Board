@@ -193,7 +193,9 @@ function App() {
               />
             ))}
           </div>
-          <button
+          <button 
+            className="p-2 hover:bg-slate-700 rounded-full transition-colors hover:cursor-pointer"
+            title="Download Board as PNG"
             onClick={() => {
               const canvas = canvasRef.current;
               if (canvas) {
