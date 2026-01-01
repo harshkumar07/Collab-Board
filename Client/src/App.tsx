@@ -1,15 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { Trash2, Users, ArrowLeft, LogIn, Paintbrush, Download } from 'lucide-react';
+import DialogBox from './Component/DialogBox';
 
 function App() {
   // --- States ---
   const [joined, setJoined] = useState(false);
   const [roomId, setRoomId] = useState('');
   const [status, setStatus] = useState('Connecting...');
-  const [color, setColor] = useState('#000000'); // FIXED: Default to Black
+  const [color, setColor] = useState('#000000');
   const [brushSize] = useState(5);
   const [userCount, setUserCount] = useState(1);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [isClearDialogOpen, setIsClearDialogOpen] = useState(false);
 
   // --- Refs ---
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -93,13 +95,13 @@ function App() {
     // Broadcast
     socketRef.current?.send(JSON.stringify({
       type: 'EVENT',
-      event: { 
-        x1: lastPoint.current.x, 
-        y1: lastPoint.current.y, 
-        x2: x, 
-        y2: y, 
-        color, 
-        size: brushSize 
+      event: {
+        x1: lastPoint.current.x,
+        y1: lastPoint.current.y,
+        x2: x,
+        y2: y,
+        color,
+        size: brushSize
       }
     }));
 
@@ -112,10 +114,8 @@ function App() {
   };
 
   const broadcastClear = () => {
-    if (window.confirm("Clear board for everyone?")) {
       socketRef.current?.send(JSON.stringify({ type: 'CLEAR_CANVAS' }));
       clearLocalCanvas();
-    }
   };
 
   // --- Login Screen (Previous Styling) ---
@@ -138,17 +138,17 @@ function App() {
 
           <div className="bg-slate-900/50 p-1 border border-slate-800 rounded-3xl backdrop-blur-xl w-90 ">
             <div className="p-6 space-y-4">
-              <input 
-                type="text" 
-                placeholder="Enter a room name..." 
+              <input
+                type="text"
+                placeholder="Enter a room name..."
                 className="w-full bg-slate-800 border border-slate-700 rounded-2xl px-5 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-lg"
                 value={roomId}
                 onChange={(e) => setRoomId(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && roomId && setJoined(true)}
               />
-              <button 
+              <button
                 onClick={() => roomId && setJoined(true)}
-                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-3 transition-all shadow-lg shadow-blue-600/20 text-lg"
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-2xl flex items-center justify-center gap-3 transition-all shadow-lg shadow-blue-600/20 text-lg"
               >
                 <LogIn size={22} /> Enter Room
               </button>
@@ -169,10 +169,10 @@ function App() {
           </button>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="font-bold text-xl text-white tracking-tight">{roomId}</h2>
+              <h2 className="font-bold text-xl text-white tracking-tight">{roomId.toUpperCase()}</h2>
               <div className="flex items-center gap-1.5 bg-green-500/10 px-2 py-0.5 rounded-full border border-green-500/20">
-                 <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
-                 <span className="text-[10px] text-green-400 font-bold uppercase tracking-widest">Live</span>
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                <span className="text-[10px] text-green-400 font-bold uppercase tracking-widest">Live</span>
               </div>
             </div>
             <div className="flex items-center gap-2 text-slate-400">
@@ -186,7 +186,7 @@ function App() {
           <div className="flex gap-2.5 bg-slate-900 p-1.5 rounded-2xl border border-slate-700">
             {/* COLOR PALETTE: Added #000000 for visibility */}
             {['#000000', '#3b82f6', '#ef4444', '#22c55e', '#ffffff'].map((c) => (
-              <button 
+              <button
                 key={c} onClick={() => setColor(c)}
                 className={`w-8 h-8 rounded-full border-2 transition-all ${color === c ? 'border-white scale-110 shadow-lg' : 'border-transparent opacity-60 hover:opacity-100'}`}
                 style={{ backgroundColor: c }}
@@ -206,7 +206,12 @@ function App() {
           >
             <Download size={18} />
           </button>
-          <button onClick={broadcastClear} className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all font-bold border border-red-500/20">
+          <DialogBox
+            isOpen={isClearDialogOpen}
+            onClose={() => setIsClearDialogOpen(false)}
+            onConfirm={broadcastClear}
+          />
+          <button onClick={() => setIsClearDialogOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all font-bold border border-red-500/20">
             <Trash2 size={18} />
             <span className="hidden xl:inline text-sm">Clear Board</span>
           </button>
